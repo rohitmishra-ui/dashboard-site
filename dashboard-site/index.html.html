@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoTrack Pro — Dealer Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #18181f;
+    --bg4: #1e1e28;
+    --surface: #22222e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8e8f0;
+    --text2: #9898b0;
+    --text3: #5a5a70;
+    --accent: #6c63ff;
+    --accent2: #8b84ff;
+    --accent-glow: rgba(108,99,255,0.15);
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.1);
+    --amber: #f59e0b;
+    --amber-bg: rgba(245,158,11,0.1);
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,0.1);
+    --blue: #3b82f6;
+    --blue-bg: rgba(59,130,246,0.1);
+    --teal: #14b8a6;
+    --teal-bg: rgba(20,184,166,0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo span {
+    color: var(--accent2);
+  }
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 8px; font-size: 13px;
+    font-weight: 500; cursor: pointer; border: none;
+    transition: all 0.15s; font-family: 'Inter', sans-serif;
+  }
+  .btn-ghost {
+    background: transparent; color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { background: var(--surface); color: var(--text); }
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    border: 1px solid transparent;
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* MAIN LAYOUT */
+  .layout { display: flex; min-height: calc(100vh - 61px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 260px; min-width: 260px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 16px 0;
+    position: sticky; top: 61px;
+    height: calc(100vh - 61px);
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    padding: 0 12px;
+    margin-bottom: 4px;
+  }
+  .sidebar-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--text3);
+    padding: 8px 8px 6px;
+  }
+  .dealer-btn {
+    width: 100%; text-align: left;
+    background: transparent; border: none; cursor: pointer;
+    padding: 8px 10px; border-radius: 8px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Inter', sans-serif; font-size: 13px;
+    color: var(--text2); transition: all 0.12s;
+    margin-bottom: 2px;
+  }
+  .dealer-btn:hover { background: var(--bg3); color: var(--text); }
+  .dealer-btn.active { background: var(--accent-glow); color: var(--accent2); }
+  .dealer-avatar {
+    width: 26px; height: 26px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+  .dealer-name-wrap { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+  .dealer-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; }
+  .dealer-brand { font-size: 10px; color: var(--text3); }
+  .dealer-status {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    background: var(--text3);
+  }
+  .dealer-status.loaded { background: var(--green); box-shadow: 0 0 4px var(--green); }
+  .dealer-status.loading { background: var(--amber); animation: pulse 1s infinite; }
+  .dealer-status.error { background: var(--red); }
+
+  .add-dealer-wrap { padding: 12px; margin-top: auto; border-top: 1px solid var(--border); }
+  .add-dealer-input {
+    width: 100%; background: var(--bg3);
+    border: 1px solid var(--border2); border-radius: 8px;
+    color: var(--text); font-family: 'Inter', sans-serif;
+    font-size: 12px; padding: 8px 10px; outline: none;
+    transition: border 0.15s; margin-bottom: 8px;
+  }
+  .add-dealer-input:focus { border-color: var(--accent); }
+  .add-dealer-name-input {
+    width: 100%; background: var(--bg3);
+    border: 1px solid var(--border2); border-radius: 8px;
+    color: var(--text); font-family: 'Inter', sans-serif;
+    font-size: 12px; padding: 8px 10px; outline: none;
+    transition: border 0.15s; margin-bottom: 8px;
+  }
+  .add-dealer-name-input:focus { border-color: var(--accent); }
+
+  /* MAIN CONTENT */
+  .main { flex: 1; overflow-y: auto; }
+
+  /* OVERVIEW */
+  .overview {
+    padding: 28px 28px 0;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px; font-weight: 700;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .page-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); font-weight: 500; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 26px; font-weight: 500;
+    color: var(--text); line-height: 1;
+  }
+  .stat-sub { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+  /* DEALER GRID */
+  .dealer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+    padding: 0 28px 28px;
+  }
+
+  .dealer-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+  }
+  .dealer-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .dealer-card-header {
+    padding: 16px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dealer-card-avatar {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; flex-shrink: 0;
+    font-family: 'Syne', sans-serif;
+  }
+  .dealer-card-name {
+    font-weight: 600; font-size: 14px; color: var(--text);
+    font-family: 'Syne', sans-serif;
+  }
+  .dealer-card-brand { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .dealer-card-badge {
+    margin-left: auto; padding: 3px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+    font-family: 'DM Mono', monospace;
+  }
+  .badge-live { background: var(--green-bg); color: var(--green); }
+  .badge-loading { background: var(--amber-bg); color: var(--amber); }
+  .badge-error { background: var(--red-bg); color: var(--red); }
+  .badge-idle { background: var(--bg4); color: var(--text3); }
+
+  .dealer-card-body { padding: 14px 16px; }
+  .car-type-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-bottom: 12px;
+  }
+  .car-type-cell {
+    background: var(--bg4); border-radius: 8px;
+    padding: 8px 10px; text-align: center;
+  }
+  .car-type-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); font-weight: 600; }
+  .car-type-count {
+    font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500;
+    color: var(--text); line-height: 1.2; margin-top: 2px;
+  }
+  .car-type-cell.new-cars .car-type-count { color: var(--teal); }
+  .car-type-cell.used-cars .car-type-count { color: var(--amber); }
+  .car-type-cell.demo-cars .car-type-count { color: var(--blue); }
+
+  .offers-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .offer-tag {
+    font-size: 10px; padding: 3px 8px; border-radius: 20px;
+    background: var(--accent-glow); color: var(--accent2);
+    font-weight: 500; white-space: nowrap;
+  }
+  .offer-tag.no-offers { background: var(--bg4); color: var(--text3); }
+
+  .dealer-card-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .last-updated { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+  .view-btn {
+    font-size: 11px; color: var(--accent2);
+    font-weight: 600; letter-spacing: 0.3px;
+    background: none; border: none; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .view-btn:hover { color: var(--accent); }
+
+  /* SKELETON LOADER */
+  .skeleton-line {
+    background: linear-gradient(90deg, var(--bg4) 25%, var(--surface) 50%, var(--bg4) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px; height: 14px; margin-bottom: 8px;
+  }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* DETAIL PANEL */
+  .detail-panel {
+    display: none; flex-direction: column;
+    padding: 0; min-height: 100%;
+  }
+  .detail-panel.visible { display: flex; }
+
+  .detail-header {
+    padding: 24px 28px 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+  .detail-back {
+    font-size: 12px; color: var(--text2);
+    background: none; border: none; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    display: flex; align-items: center; gap: 4px;
+    margin-bottom: 16px; transition: color 0.12s;
+  }
+  .detail-back:hover { color: var(--text); }
+  .detail-title-row {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .detail-avatar {
+    width: 52px; height: 52px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800;
+    font-family: 'Syne', sans-serif;
+  }
+  .detail-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 700; color: var(--text);
+  }
+  .detail-url { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .detail-meta { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .detail-refresh-btn {
+    margin-left: auto;
+    background: var(--bg4); border: 1px solid var(--border2);
+    color: var(--text2); border-radius: 8px;
+    padding: 8px 14px; font-size: 12px; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-weight: 500;
+    transition: all 0.15s;
+  }
+  .detail-refresh-btn:hover { background: var(--surface); color: var(--text); }
+  .detail-refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* DETAIL BODY */
+  .detail-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 24px; flex: 1; }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--text2); letter-spacing: 0.3px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* STOCK SUMMARY */
+  .stock-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .stock-cell {
+    background: var(--bg4); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px;
+    text-align: center;
+  }
+  .stock-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); margin-bottom: 8px; }
+  .stock-count {
+    font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 500;
+    line-height: 1;
+  }
+  .stock-sub { font-size: 11px; color: var(--text2); margin-top: 6px; }
+  .stock-cell.new .stock-count { color: var(--teal); }
+  .stock-cell.used .stock-count { color: var(--amber); }
+  .stock-cell.demo .stock-count { color: var(--blue); }
+
+  /* OFFERS */
+  .offers-grid { display: flex; flex-direction: column; gap: 10px; }
+  .offer-card {
+    background: var(--bg4); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .offer-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--accent-glow); color: var(--accent2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .offer-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .offer-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .offer-savings { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--green); margin-top: 4px; }
+
+  /* MODELS TABLE */
+  .models-table {
+    background: var(--bg4); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .models-table table { width: 100%; border-collapse: collapse; }
+  .models-table th {
+    text-align: left; padding: 10px 14px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--text3); font-weight: 600;
+    border-bottom: 1px solid var(--border); background: var(--bg3);
+  }
+  .models-table td {
+    padding: 10px 14px; font-size: 13px; color: var(--text2);
+    border-bottom: 1px solid var(--border);
+  }
+  .models-table tr:last-child td { border-bottom: none; }
+  .models-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .model-name { color: var(--text); font-weight: 500; }
+  .model-price {
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    color: var(--green);
+  }
+  .model-type-badge {
+    padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 600;
+  }
+  .type-new { background: var(--teal-bg); color: var(--teal); }
+  .type-used { background: var(--amber-bg); color: var(--amber); }
+  .type-demo { background: var(--blue-bg); color: var(--blue); }
+
+  /* LOADING STATE */
+  .loading-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 60px 20px; gap: 16px;
+  }
+  .loading-spinner {
+    width: 40px; height: 40px; border: 2px solid var(--border2);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--text2); text-align: center; line-height: 1.6; }
+
+  /* ERROR STATE */
+  .error-state {
+    background: var(--red-bg); border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 10px; padding: 14px 16px;
+    font-size: 13px; color: var(--red); line-height: 1.5;
+  }
+
+  /* RAW AI OUTPUT */
+  .ai-raw {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--text2); line-height: 1.7;
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 300px; overflow-y: auto;
+  }
+
+  /* TAB BAR */
+  .tab-bar {
+    display: flex; gap: 2px;
+    background: var(--bg4); border-radius: 8px; padding: 3px;
+    width: fit-content; margin-bottom: 16px;
+  }
+  .tab-btn {
+    padding: 6px 14px; border-radius: 6px; border: none;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    background: transparent; color: var(--text3);
+    font-family: 'Inter', sans-serif; transition: all 0.12s;
+  }
+  .tab-btn.active { background: var(--surface); color: var(--text); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px; padding: 60px 20px;
+    color: var(--text3); font-size: 13px; text-align: center;
+  }
+  .empty-icon { font-size: 36px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 12px 16px;
+    font-size: 13px; color: var(--text); z-index: 999;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    animation: slideIn 0.2s ease;
+    display: none;
+  }
+  @keyframes slideIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Auto<span>Track</span> Pro
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="refreshAll()">⟳ Refresh All</button>
+    <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace" id="last-refresh-label">Never refreshed</span>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Dealerships</div>
+      <div id="sidebar-list"></div>
+    </div>
+
+    <div class="add-dealer-wrap">
+      <div class="sidebar-label" style="padding-top:0">Add Dealership</div>
+      <input type="text" class="add-dealer-name-input" id="new-dealer-name" placeholder="Name (e.g. Melville Kia)">
+      <input type="text" class="add-dealer-input" id="new-dealer-url" placeholder="https://www.dealership.com.au">
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addDealer()">+ Add &amp; Scan</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- OVERVIEW PAGE -->
+    <div id="overview-page">
+      <div class="overview">
+        <div class="page-title">Dealer Intelligence</div>
+        <div class="page-sub" id="overview-sub">Loading dealership data...</div>
+        <div class="stats-bar" id="stats-bar">
+          <div class="stat-card">
+            <div class="stat-label">TOTAL DEALERS</div>
+            <div class="stat-value" id="stat-dealers">—</div>
+            <div class="stat-sub">monitored</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">NEW VEHICLES</div>
+            <div class="stat-value" style="color:var(--teal)" id="stat-new">—</div>
+            <div class="stat-sub">in stock</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">USED VEHICLES</div>
+            <div class="stat-value" style="color:var(--amber)" id="stat-used">—</div>
+            <div class="stat-sub">in stock</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">ACTIVE OFFERS</div>
+            <div class="stat-value" style="color:var(--accent2)" id="stat-offers">—</div>
+            <div class="stat-sub">running now</div>
+          </div>
+        </div>
+      </div>
+      <div class="dealer-grid" id="dealer-grid"></div>
+    </div>
+
+    <!-- DETAIL PAGE -->
+    <div id="detail-page" class="detail-panel">
+      <div class="detail-header">
+        <button class="detail-back" onclick="showOverview()">← Back to all dealers</button>
+        <div class="detail-title-row">
+          <div class="detail-avatar" id="detail-avatar"></div>
+          <div>
+            <div class="detail-name" id="detail-name"></div>
+            <div class="detail-url" id="detail-url"></div>
+            <div class="detail-meta">
+              <span class="dealer-card-badge" id="detail-badge">LIVE</span>
+              <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace" id="detail-ts"></span>
+            </div>
+          </div>
+          <button class="detail-refresh-btn" id="detail-refresh-btn" onclick="refreshCurrentDealer()">⟳ Refresh Data</button>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div id="detail-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_KEY_NOTE = ""; // API key is injected server-side — do not put keys here
+
+const DEALERS = [
+  { id: "melville-kia", name: "Melville Kia", brand: "Kia", url: "https://www.melvillekia.com.au/", color: "#E84040", initials: "KI" },
+  { id: "melville-suzuki", name: "Melville Suzuki", brand: "Suzuki", url: "https://www.melvillesuzuki.com.au/", color: "#2563EB", initials: "SU" },
+  { id: "melville-renault", name: "Melville Renault", brand: "Renault", url: "https://www.melvillerenault.com.au/", color: "#F59E0B", initials: "RE" },
+  { id: "melville-gwm", name: "Melville GWM", brand: "GWM Haval", url: "https://www.melvillegwm.com.au/", color: "#059669", initials: "GW" },
+  { id: "chery-melville", name: "Chery Melville", brand: "Chery", url: "https://www.cherymelville.com.au/", color: "#7C3AED", initials: "CH" },
+  { id: "paradise-jaecoo", name: "Paradise Omoda Jaecoo", brand: "Omoda / Jaecoo", url: "https://www.paradisemotorsomodajaecoo.com.au/", color: "#0EA5E9", initials: "OJ" },
+  { id: "paradise-mazda", name: "Paradise Mazda", brand: "Mazda", url: "https://www.paradisemazda.com.au/", color: "#DC2626", initials: "MA" },
+  { id: "brighton-mazda", name: "Brighton Mazda", brand: "Mazda", url: "https://www.brightonmazda.com.au/", color: "#B91C1C", initials: "BM" },
+  { id: "morley-gwm", name: "Morley GWM", brand: "GWM Haval", url: "https://www.morleygwm.com.au/", color: "#16A34A", initials: "MG" }
+];
+
+let dealerData = {};
+let currentDealerId = null;
+
+// Store & Load from localStorage
+function saveData() {
+  try { localStorage.setItem("autotrack-data", JSON.stringify(dealerData)); } catch(e) {}
+}
+function loadData() {
+  try {
+    const d = localStorage.getItem("autotrack-data");
+    if (d) dealerData = JSON.parse(d);
+  } catch(e) {}
+}
+
+function showToast(msg, ms = 3000) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.display = "block";
+  setTimeout(() => { t.style.display = "none"; }, ms);
+}
+
+function renderSidebar() {
+  const list = document.getElementById("sidebar-list");
+  const allDealers = getAllDealers();
+  list.innerHTML = allDealers.map(d => {
+    const data = dealerData[d.id];
+    const statusClass = !data ? "" : data.loading ? "loading" : data.error ? "error" : "loaded";
+    const isActive = currentDealerId === d.id;
+    return `<button class="dealer-btn ${isActive ? "active" : ""}" onclick="openDealer('${d.id}')">
+      <div class="dealer-avatar" style="background:${d.color}22;color:${d.color}">${d.initials}</div>
+      <div class="dealer-name-wrap">
+        <div class="dealer-name">${d.name}</div>
+        <div class="dealer-brand">${d.brand}</div>
+      </div>
+      <div class="dealer-status ${statusClass}"></div>
+    </button>`;
+  }).join("");
+}
+
+function getAllDealers() {
+  const extra = JSON.parse(localStorage.getItem("autotrack-extra-dealers") || "[]");
+  return [...DEALERS, ...extra];
+}
+
+function renderStats() {
+  const allDealers = getAllDealers();
+  const loaded = allDealers.filter(d => dealerData[d.id] && !dealerData[d.id].loading && !dealerData[d.id].error);
+  let newTotal = 0, usedTotal = 0, offersTotal = 0;
+  loaded.forEach(d => {
+    const data = dealerData[d.id];
+    if (data) {
+      newTotal += (data.newCount || 0);
+      usedTotal += (data.usedCount || 0) + (data.demoCount || 0);
+      offersTotal += (data.offers || []).length;
+    }
+  });
+  document.getElementById("stat-dealers").textContent = allDealers.length;
+  document.getElementById("stat-new").textContent = newTotal || "—";
+  document.getElementById("stat-used").textContent = usedTotal || "—";
+  document.getElementById("stat-offers").textContent = offersTotal || "—";
+  document.getElementById("overview-sub").textContent =
+    loaded.length === 0 ? "Click 'Refresh All' to load live data from all dealers"
+    : `${loaded.length} of ${allDealers.length} dealers loaded · Live pricing, stock & offers`;
+}
+
+function renderGrid() {
+  const allDealers = getAllDealers();
+  const grid = document.getElementById("dealer-grid");
+  grid.innerHTML = allDealers.map(d => {
+    const data = dealerData[d.id];
+    const loading = data && data.loading;
+    const error = data && data.error;
+    const loaded = data && !loading && !error;
+
+    let badgeHtml = `<span class="dealer-card-badge badge-idle">IDLE</span>`;
+    if (loading) badgeHtml = `<span class="dealer-card-badge badge-loading">LOADING</span>`;
+    else if (error) badgeHtml = `<span class="dealer-card-badge badge-error">ERROR</span>`;
+    else if (loaded) badgeHtml = `<span class="dealer-card-badge badge-live">LIVE</span>`;
+
+    let bodyHtml = "";
+    if (loading) {
+      bodyHtml = `<div class="skeleton-line" style="width:80%;height:12px"></div>
+        <div class="skeleton-line" style="width:60%;height:12px"></div>
+        <div class="skeleton-line" style="width:70%;height:12px"></div>`;
+    } else if (error) {
+      bodyHtml = `<div style="font-size:12px;color:var(--red);padding:4px 0">⚠ Could not load data — click to retry</div>`;
+    } else if (loaded) {
+      const offers = data.offers || [];
+      bodyHtml = `
+        <div class="car-type-row">
+          <div class="car-type-cell new-cars">
+            <div class="car-type-label">New</div>
+            <div class="car-type-count">${data.newCount ?? "?"}</div>
+          </div>
+          <div class="car-type-cell used-cars">
+            <div class="car-type-label">Used</div>
+            <div class="car-type-count">${data.usedCount ?? "?"}</div>
+          </div>
+          <div class="car-type-cell demo-cars">
+            <div class="car-type-label">Demo</div>
+            <div class="car-type-count">${data.demoCount ?? "?"}</div>
+          </div>
+        </div>
+        <div class="offers-row">
+          ${offers.length === 0
+            ? `<span class="offer-tag no-offers">No active offers found</span>`
+            : offers.slice(0, 3).map(o => `<span class="offer-tag">${o.title || o}</span>`).join("") + (offers.length > 3 ? `<span class="offer-tag">+${offers.length-3} more</span>` : "")}
+        </div>`;
+    } else {
+      bodyHtml = `<div style="font-size:12px;color:var(--text3);padding:4px 0">Not yet loaded — click Refresh All</div>`;
+    }
+
+    const tsLabel = data && data.timestamp ? `Updated ${timeSince(data.timestamp)}` : "Never loaded";
+
+    return `<div class="dealer-card" onclick="openDealer('${d.id}')">
+      <div class="dealer-card-header">
+        <div class="dealer-card-avatar" style="background:${d.color}22;color:${d.color}">${d.initials}</div>
+        <div>
+          <div class="dealer-card-name">${d.name}</div>
+          <div class="dealer-card-brand">${d.brand} · ${d.url.replace("https://","").replace(/\/$/,"")}</div>
+        </div>
+        ${badgeHtml}
+      </div>
+      <div class="dealer-card-body">${bodyHtml}</div>
+      <div class="dealer-card-footer">
+        <span class="last-updated">${tsLabel}</span>
+        <button class="view-btn">View details →</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function timeSince(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+function render() {
+  renderSidebar();
+  renderStats();
+  renderGrid();
+  if (currentDealerId) renderDetailContent(currentDealerId);
+}
+
+// Fetch dealer data via Claude API
+async function fetchDealer(dealerId) {
+  const allDealers = getAllDealers();
+  const dealer = allDealers.find(d => d.id === dealerId);
+  if (!dealer) return;
+
+  dealerData[dealer.id] = { ...(dealerData[dealer.id] || {}), loading: true, error: false };
+  render();
+
+  const prompt = `You are a car dealership data analyst. Analyze the website ${dealer.url} for ${dealer.name} (${dealer.brand} dealer in Australia).
+
+Based on your knowledge of Australian car dealership websites, typical stock, pricing structures, and current offers for ${dealer.brand} vehicles in Australia as of 2025-2026, provide realistic data.
+
+IMPORTANT: Respond ONLY with a valid JSON object. No markdown, no explanation. Exactly this structure:
+
+{
+  "dealerName": "${dealer.name}",
+  "brand": "${dealer.brand}",
+  "newCount": <integer, estimated number of new vehicles in stock>,
+  "usedCount": <integer, estimated used vehicles>,
+  "demoCount": <integer, estimated demo/ex-demo vehicles>,
+  "offers": [
+    {
+      "title": "<short offer name>",
+      "description": "<2-3 sentence description of the offer>",
+      "savings": "<estimated saving or offer value e.g. $3,500 cashback or 2.9% finance>"
+    }
+  ],
+  "models": [
+    {
+      "name": "<model name>",
+      "variant": "<variant/trim>",
+      "type": "new|used|demo",
+      "driveAwayPrice": "<price string e.g. $35,990>",
+      "stockCount": <number available>
+    }
+  ],
+  "highlights": ["<3-5 key dealership or brand highlights>"],
+  "summary": "<2-3 sentence summary of this dealership's current market position>"
+}
+
+Include 2-4 realistic current offers for ${dealer.brand} Australia (e.g. driveaway deals, cashback, low finance, free service). Include 6-12 realistic model/variant listings. Make data realistic for ${dealer.brand} in Australia 2025-2026.`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-dangerous-direct-browser-calls": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1800,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    let text = data.content.map(b => b.text || "").join("");
+    text = text.replace(/```json|```/g, "").trim();
+
+    let parsed;
+    try { parsed = JSON.parse(text); }
+    catch(e) {
+      // Try to extract JSON from text
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+      else throw new Error("Could not parse response JSON");
+    }
+
+    dealerData[dealer.id] = {
+      ...parsed,
+      loading: false,
+      error: false,
+      timestamp: Date.now()
+    };
+    saveData();
+    showToast(`✓ ${dealer.name} data loaded`);
+  } catch(e) {
+    dealerData[dealer.id] = {
+      loading: false,
+      error: true,
+      errorMsg: e.message,
+      timestamp: Date.now()
+    };
+    showToast(`⚠ ${dealer.name}: ${e.message}`, 5000);
+  }
+  render();
+}
+
+async function refreshAll() {
+  const allDealers = getAllDealers();
+  document.getElementById("last-refresh-label").textContent = "Refreshing...";
+  // Stagger requests to avoid rate limiting
+  for (let i = 0; i < allDealers.length; i++) {
+    fetchDealer(allDealers[i].id);
+    await new Promise(r => setTimeout(r, 500));
+  }
+  document.getElementById("last-refresh-label").textContent = `Refreshed ${new Date().toLocaleTimeString()}`;
+}
+
+function refreshCurrentDealer() {
+  if (!currentDealerId) return;
+  const btn = document.getElementById("detail-refresh-btn");
+  btn.disabled = true; btn.textContent = "⟳ Loading...";
+  fetchDealer(currentDealerId).finally(() => {
+    btn.disabled = false; btn.textContent = "⟳ Refresh Data";
+  });
+}
+
+function openDealer(id) {
+  currentDealerId = id;
+  const allDealers = getAllDealers();
+  const dealer = allDealers.find(d => d.id === id);
+  if (!dealer) return;
+
+  document.getElementById("overview-page").style.display = "none";
+  const dp = document.getElementById("detail-page");
+  dp.classList.add("visible");
+
+  const data = dealerData[id];
+  const av = document.getElementById("detail-avatar");
+  av.textContent = dealer.initials;
+  av.style.background = dealer.color + "22";
+  av.style.color = dealer.color;
+
+  document.getElementById("detail-name").textContent = dealer.name;
+  document.getElementById("detail-url").textContent = dealer.url;
+
+  const badge = document.getElementById("detail-badge");
+  if (!data) { badge.className = "dealer-card-badge badge-idle"; badge.textContent = "IDLE"; }
+  else if (data.loading) { badge.className = "dealer-card-badge badge-loading"; badge.textContent = "LOADING"; }
+  else if (data.error) { badge.className = "dealer-card-badge badge-error"; badge.textContent = "ERROR"; }
+  else { badge.className = "dealer-card-badge badge-live"; badge.textContent = "LIVE"; }
+
+  document.getElementById("detail-ts").textContent = data?.timestamp ? `Updated ${timeSince(data.timestamp)}` : "";
+
+  renderDetailContent(id);
+  renderSidebar();
+
+  // Auto-fetch if not loaded
+  if (!data || data.error) fetchDealer(id);
+}
+
+function renderDetailContent(id) {
+  const allDealers = getAllDealers();
+  const dealer = allDealers.find(d => d.id === id);
+  const data = dealerData[id];
+  const container = document.getElementById("detail-content");
+  if (!data || data.loading) {
+    container.innerHTML = `<div class="loading-state">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Scanning ${dealer?.name || "dealership"} website...<br>Fetching stock, pricing & offers</div>
+    </div>`;
+    return;
+  }
+  if (data.error) {
+    container.innerHTML = `<div class="error-state">⚠ Failed to load data: ${data.errorMsg || "Unknown error"}<br><br>
+      <button class="btn btn-primary" onclick="refreshCurrentDealer()">Try Again</button>
+    </div>`;
+    return;
+  }
+
+  // Stock summary
+  const stockHtml = `
+    <div>
+      <div class="section-title"><div class="section-title-dot"></div>Stock Overview</div>
+      <div class="stock-grid">
+        <div class="stock-cell new">
+          <div class="stock-label">New</div>
+          <div class="stock-count">${data.newCount ?? "?"}</div>
+          <div class="stock-sub">vehicles in stock</div>
+        </div>
+        <div class="stock-cell used">
+          <div class="stock-label">Used</div>
+          <div class="stock-count">${data.usedCount ?? "?"}</div>
+          <div class="stock-sub">pre-owned available</div>
+        </div>
+        <div class="stock-cell demo">
+          <div class="stock-label">Demo</div>
+          <div class="stock-count">${data.demoCount ?? "?"}</div>
+          <div class="stock-sub">ex-demo / demonstrators</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Summary
+  const summaryHtml = data.summary ? `
+    <div>
+      <div class="section-title"><div class="section-title-dot"></div>Dealership Summary</div>
+      <div style="background:var(--bg4);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:13px;color:var(--text2);line-height:1.7">${data.summary}</div>
+      ${data.highlights ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+        ${data.highlights.map(h => `<span class="offer-tag" style="font-size:11px">${h}</span>`).join("")}
+      </div>` : ""}
+    </div>` : "";
+
+  // Offers
+  const icons = ["🏷", "💰", "⚡", "🎯", "✨", "🔧"];
+  const offersHtml = `
+    <div>
+      <div class="section-title"><div class="section-title-dot"></div>Current Offers & Promotions</div>
+      ${!data.offers || data.offers.length === 0
+        ? `<div class="empty-state"><div class="empty-icon">🏷</div><div>No active offers found</div></div>`
+        : `<div class="offers-grid">${data.offers.map((o, i) => `
+          <div class="offer-card">
+            <div class="offer-icon">${icons[i % icons.length]}</div>
+            <div>
+              <div class="offer-title">${o.title || "Special Offer"}</div>
+              <div class="offer-desc">${o.description || ""}</div>
+              ${o.savings ? `<div class="offer-savings">→ ${o.savings}</div>` : ""}
+            </div>
+          </div>`).join("")}</div>`}
+    </div>`;
+
+  // Models table
+  const modelsHtml = `
+    <div>
+      <div class="section-title"><div class="section-title-dot"></div>Models & Pricing</div>
+      ${!data.models || data.models.length === 0
+        ? `<div class="empty-state"><div class="empty-icon">🚗</div><div>No model data available</div></div>`
+        : `<div class="models-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Variant</th>
+                <th>Type</th>
+                <th>Price</th>
+                <th>Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.models.map(m => `
+                <tr>
+                  <td class="model-name">${m.name || "—"}</td>
+                  <td>${m.variant || "—"}</td>
+                  <td><span class="model-type-badge type-${m.type || "new"}">${(m.type || "new").toUpperCase()}</span></td>
+                  <td class="model-price">${m.driveAwayPrice || "POA"}</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:12px">${m.stockCount ?? "?"}</td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`}
+    </div>`;
+
+  // Website link
+  const linkHtml = `
+    <div style="display:flex;gap:10px;align-items:center;padding:4px 0">
+      <a href="${dealer?.url}" target="_blank" style="font-size:12px;color:var(--accent2);text-decoration:none;border:1px solid var(--border2);padding:8px 14px;border-radius:8px;font-weight:500;transition:all 0.12s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+        ↗ Visit ${dealer?.name} Website
+      </a>
+      <span style="font-size:11px;color:var(--text3)">Data is AI-estimated based on publicly known stock & pricing patterns</span>
+    </div>`;
+
+  container.innerHTML = stockHtml + summaryHtml + offersHtml + modelsHtml + linkHtml;
+}
+
+function showOverview() {
+  currentDealerId = null;
+  document.getElementById("overview-page").style.display = "block";
+  document.getElementById("detail-page").classList.remove("visible");
+  renderSidebar();
+}
+
+function addDealer() {
+  const nameInput = document.getElementById("new-dealer-name");
+  const urlInput = document.getElementById("new-dealer-url");
+  let url = urlInput.value.trim();
+  const name = nameInput.value.trim();
+  if (!url || !name) { showToast("⚠ Please enter both a name and URL"); return; }
+  if (!url.startsWith("http")) url = "https://" + url;
+
+  const id = "custom-" + Date.now();
+  const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const colors = ["#6366F1","#EC4899","#14B8A6","#F97316","#8B5CF6","#06B6D4"];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+
+  const newDealer = { id, name, brand: "Custom", url, color, initials };
+  const extra = JSON.parse(localStorage.getItem("autotrack-extra-dealers") || "[]");
+  extra.push(newDealer);
+  localStorage.setItem("autotrack-extra-dealers", JSON.stringify(extra));
+
+  nameInput.value = ""; urlInput.value = "";
+  showToast(`+ ${name} added — scanning now...`);
+  render();
+  fetchDealer(id);
+}
+
+// Init
+loadData();
+render();
+
+// Optionally show hint if no data
+setTimeout(() => {
+  const allDealers = getAllDealers();
+  const anyLoaded = allDealers.some(d => dealerData[d.id] && !dealerData[d.id].loading);
+  if (!anyLoaded) {
+    showToast("👋 Click 'Refresh All' to load live data from all 9 dealers", 5000);
+  }
+}, 1000);
+</script>
+</body>
+</html>
